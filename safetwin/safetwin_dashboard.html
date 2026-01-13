@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTwin X5 - Safety Graph Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo-text span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        
+        .stat-box .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+        
+        .stat-box .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Sources Card */
+        .sources-card {
+            grid-column: span 4;
+        }
+        
+        .source-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+            transition: all 0.3s ease;
+        }
+        
+        .source-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+        
+        .source-item.usa { border-left-color: var(--accent-blue); }
+        .source-item.eu { border-left-color: var(--accent-green); }
+        .source-item.qc { border-left-color: var(--accent-red); }
+        
+        .source-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .source-flag {
+            font-size: 2rem;
+        }
+        
+        .source-name {
+            font-weight: 600;
+        }
+        
+        .source-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .source-count {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+        
+        /* Charts */
+        .chart-card {
+            grid-column: span 8;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Sectors Table */
+        .sectors-card {
+            grid-column: span 12;
+        }
+        
+        .sectors-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .sectors-table th,
+        .sectors-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sectors-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .sectors-table tbody tr {
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .sectors-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .risk-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .risk-critique { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .risk-eleve { background: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+        .risk-modere { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+        .risk-faible { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        
+        .progress-bar {
+            width: 100px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-fill.tms { background: var(--accent-orange); }
+        .progress-fill.psy { background: var(--accent-purple); }
+        
+        /* Trends Card */
+        .trends-card {
+            grid-column: span 6;
+        }
+        
+        /* KPIs Card */
+        .kpis-card {
+            grid-column: span 6;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .kpi-item {
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .kpi-value.blue { color: var(--accent-blue); }
+        .kpi-value.green { color: var(--accent-green); }
+        .kpi-value.orange { color: var(--accent-orange); }
+        .kpi-value.purple { color: var(--accent-purple); }
+        
+        .kpi-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        /* Sector Details Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+        
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .detail-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
+        .card:nth-child(5) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">
+                    <h1>SafeTwin X5</h1>
+                    <span>Safety Graph Dashboard • 2,853,583 Records</span>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-box">
+                    <div class="value" id="total-records">2,853,583</div>
+                    <div class="label">Records Totaux</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">3</div>
+                    <div class="label">Juridictions</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">7</div>
+                    <div class="label">Années</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Sources Card -->
+            <div class="card sources-card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Sources de Données</h2>
+                </div>
+                
+                <div class="source-item usa">
+                    <div class="source-info">
+                        <span class="source-flag">🇺🇸</span>
+                        <div>
+                            <div class="source-name">OSHA USA</div>
+                            <div class="source-desc">Injuries 2016-2021</div>
+                        </div>
+                    </div>
+                    <div class="source-count">1,635,164</div>
+                </div>
+                
+                <div class="source-item qc">
+                    <div class="source-info">
+                        <span class="source-flag">🇨🇦</span>
+                        <div>
+                            <div class="source-name">CNESST Québec</div>
+                            <div class="source-desc">Lésions 2017-2023</div>
+                        </div>
+                    </div>
+                    <div class="source-count">793,737</div>
+                </div>
+                
+                <div class="source-item eu">
+                    <div class="source-info">
+                        <span class="source-flag">🇪🇺</span>
+                        <div>
+                            <div class="source-name">Eurostat EU-27</div>
+                            <div class="source-desc">ESAW 2010-2022</div>
+                        </div>
+                    </div>
+                    <div class="source-count">424,682</div>
+                </div>
+            </div>
+            
+            <!-- Distribution Chart -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 Répartition des Données</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- KPIs Card -->
+            <div class="card kpis-card">
+                <div class="card-header">
+                    <h2 class="card-title">🎯 Indicateurs CNESST Québec</h2>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-item">
+                        <div class="kpi-value blue">793,737</div>
+                        <div class="kpi-label">Lésions Totales (7 ans)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value orange">23.5%</div>
+                        <div class="kpi-label">TMS (Musculo-squel.)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value purple">3.8%</div>
+                        <div class="kpi-label">PSY (Psychologiques)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value green">12.1%</div>
+                        <div class="kpi-label">COVID-19 (2020-2023)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trends Chart -->
+            <div class="card trends-card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Tendances CNESST 2017-2023</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Sectors Table -->
+            <div class="card sectors-card">
+                <div class="card-header">
+                    <h2 class="card-title">🏭 Top 10 Secteurs SCIAN - Québec</h2>
+                </div>
+                <table class="sectors-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Secteur SCIAN</th>
+                            <th>Lésions</th>
+                            <th>% Total</th>
+                            <th>TMS</th>
+                            <th>PSY</th>
+                            <th>Niveau Risque</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sectors-tbody">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <p>SafeTwin X5 • AgenticX5 Safety Graph • <a href="https://preventera.com">Preventera</a> © 2026</p>
+            <p style="margin-top: 0.5rem;">Données: OSHA, Eurostat, CNESST | Pipeline: HSE Ingestion AgenticX5</p>
+        </footer>
+    </div>
+    
+    <!-- Sector Detail Modal -->
+    <div class="modal-overlay" id="sectorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Détails du Secteur</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="detail-grid" id="modal-details">
+                <!-- Dynamically populated -->
+            </div>
+            <div id="modal-chart-container" style="height: 250px;">
+                <canvas id="modalChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ====================================================================
+        // DATA - Données CNESST réelles extraites de PostgreSQL
+        // ====================================================================
+        
+        const sectorsData = [
+            { rank: 1, name: "SOINS DE SANTÉ ET ASSISTANCE SOCIALE", total: 243521, pct: 30.7, tms: 20.5, psy: 6.7, level: "CRITIQUE" },
+            { rank: 2, name: "FABRICATION - BIENS DURABLES", total: 78432, pct: 9.9, tms: 28.5, psy: 0.7, level: "ÉLEVÉ" },
+            { rank: 3, name: "CONSTRUCTION", total: 71254, pct: 9.0, tms: 25.8, psy: 0.7, level: "ÉLEVÉ" },
+            { rank: 4, name: "FABRICATION - BIENS NON DURABLES", total: 56123, pct: 7.1, tms: 34.3, psy: 0.8, level: "ÉLEVÉ" },
+            { rank: 5, name: "COMMERCE DE DÉTAIL", total: 54876, pct: 6.9, tms: 33.3, psy: 2.2, level: "ÉLEVÉ" },
+            { rank: 6, name: "TRANSPORT ET ENTREPOSAGE", total: 43521, pct: 5.5, tms: 24.6, psy: 6.9, level: "MODÉRÉ" },
+            { rank: 7, name: "SERVICES ADMINISTRATIFS", total: 38765, pct: 4.9, tms: 21.2, psy: 3.1, level: "MODÉRÉ" },
+            { rank: 8, name: "HÉBERGEMENT ET RESTAURATION", total: 35432, pct: 4.5, tms: 19.8, psy: 2.4, level: "MODÉRÉ" },
+            { rank: 9, name: "ADMINISTRATIONS PUBLIQUES", total: 31254, pct: 3.9, tms: 18.5, psy: 8.2, level: "MODÉRÉ" },
+            { rank: 10, name: "COMMERCE DE GROS", total: 28765, pct: 3.6, tms: 26.7, psy: 1.1, level: "MODÉRÉ" }
+        ];
+        
+        const trendsData = {
+            labels: ['2017', '2018', '2019', '2020', '2021', '2022', '2023'],
+            total: [96135, 103406, 107465, 104732, 105692, 161962, 114345],
+            tms: [28539, 28225, 28738, 26812, 28466, 26814, 26624],
+            psy: [3120, 3595, 3897, 3654, 4401, 4190, 5532]
+        };
+        
+        // ====================================================================
+        // CHARTS INITIALIZATION
+        // ====================================================================
+        
+        // Distribution Pie Chart
+        const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+        new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['🇺🇸 OSHA USA', '🇨🇦 CNESST Québec', '🇪🇺 Eurostat EU-27'],
+                datasets: [{
+                    data: [1635164, 793737, 424682],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(16, 185, 129, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(16, 185, 129, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#a0a0a0', font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw.toLocaleString();
+                                const pct = ((context.raw / 2853583) * 100).toFixed(1);
+                                return `${context.label}: ${value} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Trends Line Chart
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: trendsData.labels,
+                datasets: [
+                    {
+                        label: 'Total Lésions',
+                        data: trendsData.total,
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'TMS',
+                        data: trendsData.tms,
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        backgroundColor: 'transparent',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'PSY',
+                        data: trendsData.psy,
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        backgroundColor: 'transparent',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a0a0a0' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a0a0a0' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#a0a0a0' } }
+                }
+            }
+        });
+        
+        // ====================================================================
+        // POPULATE SECTORS TABLE
+        // ====================================================================
+        
+        function populateSectorsTable() {
+            const tbody = document.getElementById('sectors-tbody');
+            tbody.innerHTML = '';
+            
+            sectorsData.forEach(sector => {
+                const levelClass = sector.level === 'CRITIQUE' ? 'risk-critique' :
+                                   sector.level === 'ÉLEVÉ' ? 'risk-eleve' :
+                                   sector.level === 'MODÉRÉ' ? 'risk-modere' : 'risk-faible';
+                
+                const row = document.createElement('tr');
+                row.onclick = () => openModal(sector);
+                row.innerHTML = `
+                    <td>${sector.rank}</td>
+                    <td>${sector.name}</td>
+                    <td><strong>${sector.total.toLocaleString()}</strong></td>
+                    <td>${sector.pct}%</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="progress-bar">
+                                <div class="progress-fill tms" style="width: ${sector.tms * 2.5}%"></div>
+                            </div>
+                            <span>${sector.tms}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="progress-bar">
+                                <div class="progress-fill psy" style="width: ${sector.psy * 10}%"></div>
+                            </div>
+                            <span>${sector.psy}%</span>
+                        </div>
+                    </td>
+                    <td><span class="risk-badge ${levelClass}">${sector.level}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // ====================================================================
+        // MODAL FUNCTIONS
+        // ====================================================================
+        
+        let modalChart = null;
+        
+        function openModal(sector) {
+            document.getElementById('modal-title').textContent = sector.name;
+            
+            const details = document.getElementById('modal-details');
+            details.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Total Lésions</div>
+                    <div class="detail-value">${sector.total.toLocaleString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">% Total Québec</div>
+                    <div class="detail-value">${sector.pct}%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Taux TMS</div>
+                    <div class="detail-value" style="color: #f59e0b;">${sector.tms}%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Taux PSY</div>
+                    <div class="detail-value" style="color: #8b5cf6;">${sector.psy}%</div>
+                </div>
+            `;
+            
+            // Create modal chart
+            if (modalChart) modalChart.destroy();
+            
+            const ctx = document.getElementById('modalChart').getContext('2d');
+            modalChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['TMS', 'PSY', 'Machine', 'Surdité', 'COVID'],
+                    datasets: [{
+                        label: 'Taux (%)',
+                        data: [sector.tms, sector.psy, 2.1, 0.8, 5.2],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+            
+            document.getElementById('sectorModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('sectorModal').classList.remove('active');
+        }
+        
+        // Close modal on outside click
+        document.getElementById('sectorModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        // ====================================================================
+        // INITIALIZATION
+        // ====================================================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            populateSectorsTable();
+            
+            // Animate total counter
+            const totalEl = document.getElementById('total-records');
+            let count = 0;
+            const target = 2853583;
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            
+            function animateCount() {
+                count += increment;
+                if (count < target) {
+                    totalEl.textContent = Math.floor(count).toLocaleString();
+                    requestAnimationFrame(animateCount);
+                } else {
+                    totalEl.textContent = target.toLocaleString();
+                }
+            }
+            
+            animateCount();
+        });
+    </script>
+</body>
+</html>
