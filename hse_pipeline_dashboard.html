@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 — HSE Pipeline Control Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f; --card: rgba(255,255,255,0.03); --card-hover: rgba(255,255,255,0.06);
+            --border: rgba(255,255,255,0.08); --text: #fff; --muted: #71717a;
+            --blue: #3b82f6; --green: #10b981; --purple: #8b5cf6; --orange: #f59e0b;
+            --red: #ef4444; --cyan: #06b6d4; --pink: #ec4899; --yellow: #eab308;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        /* Header */
+        .header { background: linear-gradient(180deg, rgba(59,130,246,0.1) 0%, transparent 100%); padding: 2rem; border-bottom: 1px solid var(--border); }
+        .header-content { max-width: 1600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--blue), var(--purple)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; }
+        .logo h1 span { background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-stats { display: flex; gap: 2rem; }
+        .header-stat { text-align: right; }
+        .header-stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; }
+        .header-stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+        
+        /* Main Container */
+        .container { max-width: 1600px; margin: 0 auto; padding: 2rem; }
+        
+        /* Grid Layout */
+        .grid { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; }
+        .main-content { display: flex; flex-direction: column; gap: 2rem; }
+        .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        /* Cards */
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        /* Sources List */
+        .sources-grid { display: grid; gap: 1rem; }
+        .source-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; transition: all 0.3s; cursor: pointer; }
+        .source-card:hover { background: var(--card-hover); transform: translateY(-2px); }
+        .source-card.selected { border-color: var(--blue); background: rgba(59, 130, 246, 0.1); }
+        .source-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+        .source-name { font-weight: 600; font-size: 0.95rem; }
+        .source-badge { padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .badge-priority-1 { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+        .badge-priority-2 { background: rgba(245, 158, 11, 0.15); color: var(--orange); }
+        .badge-priority-3 { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .source-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+        .source-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tag { padding: 0.15rem 0.4rem; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.7rem; color: #a1a1aa; }
+        .source-checkbox { width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer; }
+        
+        /* Pipeline Status */
+        .pipeline-status { display: flex; flex-direction: column; gap: 1rem; }
+        .status-step { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--card); border-radius: 10px; }
+        .status-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .status-icon.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .status-icon.silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .status-icon.gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .status-icon.postgres { background: linear-gradient(135deg, #336791, #1e4f77); }
+        .status-info { flex: 1; }
+        .status-name { font-weight: 600; font-size: 0.9rem; }
+        .status-detail { font-size: 0.8rem; color: var(--muted); }
+        .status-badge { padding: 0.25rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .status-pending { background: rgba(113, 113, 122, 0.2); color: var(--muted); }
+        .status-running { background: rgba(59, 130, 246, 0.2); color: var(--blue); animation: pulse 1.5s infinite; }
+        .status-success { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+        .status-error { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        /* Controls */
+        .controls { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+        .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+        .btn-secondary:hover { background: var(--card-hover); }
+        .btn-success { background: linear-gradient(135deg, var(--green), #059669); color: white; }
+        .btn-danger { background: linear-gradient(135deg, var(--red), #dc2626); color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Console */
+        .console { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; max-height: 300px; overflow-y: auto; }
+        .console-line { padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .console-line:last-child { border-bottom: none; }
+        .console-time { color: #7d8590; margin-right: 1rem; }
+        .console-info { color: var(--cyan); }
+        .console-success { color: var(--green); }
+        .console-error { color: var(--red); }
+        .console-warning { color: var(--orange); }
+        
+        /* Execution Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; width: 90%; max-width: 700px; max-height: 80vh; overflow: hidden; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; }
+        .modal-close { width: 36px; height: 36px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 1.2rem; }
+        .modal-body { padding: 1.5rem; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 1rem; }
+        
+        /* Progress */
+        .progress-bar { height: 8px; background: var(--card); border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--purple)); border-radius: 4px; transition: width 0.5s; }
+        
+        /* Code Block */
+        .code-block { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 1rem; margin: 1rem 0; overflow-x: auto; }
+        .code-block pre { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #c9d1d9; white-space: pre-wrap; }
+        .code-block .comment { color: #8b949e; }
+        .code-block .keyword { color: #ff7b72; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .function { color: #d2a8ff; }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: 1fr; }
+            .sidebar { order: -1; }
+        }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .tab { padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: var(--muted); transition: all 0.3s; }
+        .tab:hover { color: var(--text); background: var(--card); }
+        .tab.active { color: var(--text); background: var(--card); border: 1px solid var(--border); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🔄</div>
+                <h1>AgenticX5 <span>Pipeline Control</span></h1>
+            </div>
+            <div class="header-stats">
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalSources">12</div>
+                    <div class="header-stat-label">Sources Configurées</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalRows">0</div>
+                    <div class="header-stat-label">Rows Ingérés</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="lastRun">--</div>
+                    <div class="header-stat-label">Dernière Exécution</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="grid">
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Controls -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🎮 Contrôles Pipeline</h2>
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-primary" onclick="runSelectedPipelines()">
+                            ▶️ Exécuter Sélection
+                        </button>
+                        <button class="btn btn-secondary" onclick="selectAll()">
+                            ☑️ Tout Sélectionner
+                        </button>
+                        <button class="btn btn-secondary" onclick="selectPriority(1)">
+                            🔴 Priorité 1
+                        </button>
+                        <button class="btn btn-secondary" onclick="selectPriority(2)">
+                            🟠 Priorité 1-2
+                        </button>
+                        <button class="btn btn-success" onclick="mergeGoldTables()">
+                            🔗 Fusionner Gold
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadToPostgres()">
+                            🐘 → PostgreSQL
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sources List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📦 Sources de Données HSE</h2>
+                        <span style="color: var(--muted); font-size: 0.85rem;"><span id="selectedCount">0</span> sélectionnées</span>
+                    </div>
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="filterSources('all')">Toutes</div>
+                        <div class="tab" onclick="filterSources('usa')">🇺🇸 USA</div>
+                        <div class="tab" onclick="filterSources('eu')">🇪🇺 Europe</div>
+                        <div class="tab" onclick="filterSources('france')">🇫🇷 France</div>
+                        <div class="tab" onclick="filterSources('canada')">🇨🇦 Canada</div>
+                        <div class="tab" onclick="filterSources('international')">🌍 International</div>
+                    </div>
+                    
+                    <div class="sources-grid" id="sourcesGrid">
+                        <!-- Sources will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Console -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">💻 Console</h2>
+                        <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="clearConsole()">Clear</button>
+                    </div>
+                    <div class="console" id="console">
+                        <div class="console-line">
+                            <span class="console-time">--:--:--</span>
+                            <span class="console-info">🚀 Pipeline Control Center initialisé</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Pipeline Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 Statut Pipeline</h2>
+                    </div>
+                    <div class="pipeline-status">
+                        <div class="status-step">
+                            <div class="status-icon bronze">🥉</div>
+                            <div class="status-info">
+                                <div class="status-name">Bronze (Raw)</div>
+                                <div class="status-detail">Données brutes</div>
+                            </div>
+                            <span class="status-badge status-pending" id="statusBronze">En attente</span>
+                        </div>
+                        <div class="status-step">
+                            <div class="status-icon silver">🥈</div>
+                            <div class="status-info">
+                                <div class="status-name">Silver (Cleaned)</div>
+                                <div class="status-detail">Données nettoyées</div>
+                            </div>
+                            <span class="status-badge status-pending" id="statusSilver">En attente</span>
+                        </div>
+                        <div class="status-step">
+                            <div class="status-icon gold">🥇</div>
+                            <div class="status-info">
+                                <div class="status-name">Gold (Harmonized)</div>
+                                <div class="status-detail">Schéma unifié</div>
+                            </div>
+                            <span class="status-badge status-pending" id="statusGold">En attente</span>
+                        </div>
+                        <div class="status-step">
+                            <div class="status-icon postgres">🐘</div>
+                            <div class="status-info">
+                                <div class="status-name">PostgreSQL</div>
+                                <div class="status-detail">Safety Graph DB</div>
+                            </div>
+                            <span class="status-badge status-pending" id="statusPostgres">En attente</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            <span>Progression globale</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Commands -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚡ Commandes Rapides</h2>
+                    </div>
+                    
+                    <div class="code-block">
+                        <pre><span class="comment"># CLI Local</span>
+<span class="keyword">python</span> hse_data_ingestion.py <span class="string">--list</span>
+<span class="keyword">python</span> hse_data_ingestion.py <span class="string">--all --priority 1</span>
+<span class="keyword">python</span> hse_data_ingestion.py <span class="string">--merge</span></pre>
+                    </div>
+                    
+                    <div class="code-block">
+                        <pre><span class="comment"># Zerve.ai Notebook</span>
+<span class="keyword">from</span> hse_data_ingestion <span class="keyword">import</span> <span class="function">HSEPipelineOrchestrator</span>
+orchestrator = <span class="function">HSEPipelineOrchestrator</span>()
+orchestrator.<span class="function">run_all</span>(priority_threshold=<span class="string">2</span>)</pre>
+                    </div>
+                    
+                    <div class="code-block">
+                        <pre><span class="comment"># Docker</span>
+<span class="keyword">docker-compose</span> up -d
+<span class="keyword">docker exec</span> hse-ingestion <span class="string">python</span> hse_data_ingestion.py <span class="string">--all</span></pre>
+                    </div>
+                </div>
+
+                <!-- Environment -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🔧 Environnement</h2>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--card); border-radius: 8px;">
+                            <span style="color: var(--muted);">Mode</span>
+                            <span style="font-weight: 600;">Développement</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--card); border-radius: 8px;">
+                            <span style="color: var(--muted);">Data Dir</span>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">./data</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--card); border-radius: 8px;">
+                            <span style="color: var(--muted);">PostgreSQL</span>
+                            <span style="color: var(--green);">● Connecté</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--card); border-radius: 8px;">
+                            <span style="color: var(--muted);">Kaggle API</span>
+                            <span id="kaggleStatus" style="color: var(--orange);">● Non configuré</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Modal -->
+    <div class="modal-overlay" id="executionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🔄 Exécution du Pipeline</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="executionLog" class="console" style="height: 400px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="cancelExecution()" id="btnCancel">Annuler</button>
+                <button class="btn btn-secondary" onclick="closeModal()" id="btnClose" style="display: none;">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sources HSE Configuration
+        const HSE_SOURCES = [
+            {
+                key: "kaggle_osha_injuries",
+                name: "OSHA Work-Related Injury Data 2016-2021",
+                type: "kaggle",
+                jurisdiction: "USA",
+                priority: 1,
+                records: "1M+",
+                tags: ["ML-ready", "NAICS", "Forms 300A"]
+            },
+            {
+                key: "kaggle_industrial_safety",
+                name: "Industrial Safety & Health Analytics",
+                type: "kaggle",
+                jurisdiction: "International",
+                priority: 2,
+                records: "12K",
+                tags: ["Severity", "Multi-pays"]
+            },
+            {
+                key: "osha_inspections",
+                name: "OSHA Inspection Data",
+                type: "api",
+                jurisdiction: "USA",
+                priority: 1,
+                records: "8M+",
+                tags: ["API", "Violations", "Citations"]
+            },
+            {
+                key: "osha_severe_injuries",
+                name: "OSHA Severe Injury Reports",
+                type: "api",
+                jurisdiction: "USA",
+                priority: 2,
+                records: "10K/an",
+                tags: ["Hospitalisations", "Narratifs"]
+            },
+            {
+                key: "bls_cfoi",
+                name: "BLS Census of Fatal Occupational Injuries",
+                type: "api",
+                jurisdiction: "USA",
+                priority: 1,
+                records: "30+ ans",
+                tags: ["Décès", "Time Series"]
+            },
+            {
+                key: "eurostat_esaw",
+                name: "Eurostat ESAW - Accidents at Work",
+                type: "sdmx",
+                jurisdiction: "EU-27",
+                priority: 1,
+                records: "27 pays",
+                tags: ["NACE Rev.2", "SDMX API"]
+            },
+            {
+                key: "ilostat_injuries",
+                name: "ILOSTAT Occupational Injuries",
+                type: "sdmx",
+                jurisdiction: "International",
+                priority: 1,
+                records: "180+ pays",
+                tags: ["SDG 8.8.1", "Global"]
+            },
+            {
+                key: "dares_at",
+                name: "DARES Accidents du Travail France",
+                type: "file",
+                jurisdiction: "France",
+                priority: 1,
+                records: "668K/an",
+                tags: ["NAF", "CNAM", "MSA"]
+            },
+            {
+                key: "carsat_opendata",
+                name: "CARSAT Open Data - Pays de la Loire",
+                type: "api",
+                jurisdiction: "France",
+                priority: 2,
+                records: "Régional",
+                tags: ["Sinistralité", "CTN"]
+            },
+            {
+                key: "cnesst_lesions",
+                name: "CNESST Lésions Professionnelles Québec",
+                type: "file",
+                jurisdiction: "Quebec",
+                priority: 1,
+                records: "793K+",
+                tags: ["SCIAN", "2017-2023"]
+            },
+            {
+                key: "hse_uk_riddor",
+                name: "HSE UK RIDDOR Reports",
+                type: "api",
+                jurisdiction: "UK",
+                priority: 2,
+                records: "Annual",
+                tags: ["Major Injuries", "SIC"]
+            },
+            {
+                key: "worksafe_bc",
+                name: "WorkSafeBC Claims Data",
+                type: "file",
+                jurisdiction: "Canada",
+                priority: 2,
+                records: "500K+",
+                tags: ["British Columbia", "WCB"]
+            }
+        ];
+
+        let selectedSources = new Set();
+        let isRunning = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSources();
+            log('info', '📋 12 sources HSE configurées et prêtes');
+        });
+
+        // Render sources
+        function renderSources(filter = 'all') {
+            const grid = document.getElementById('sourcesGrid');
+            let filtered = HSE_SOURCES;
+
+            if (filter !== 'all') {
+                const filterMap = {
+                    'usa': ['USA'],
+                    'eu': ['EU-27'],
+                    'france': ['France'],
+                    'canada': ['Quebec', 'Canada'],
+                    'international': ['International']
+                };
+                filtered = HSE_SOURCES.filter(s => filterMap[filter]?.includes(s.jurisdiction));
+            }
+
+            grid.innerHTML = filtered.map(source => `
+                <div class="source-card ${selectedSources.has(source.key) ? 'selected' : ''}" 
+                     onclick="toggleSource('${source.key}')">
+                    <div class="source-header">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <input type="checkbox" class="source-checkbox" 
+                                   ${selectedSources.has(source.key) ? 'checked' : ''}
+                                   onclick="event.stopPropagation(); toggleSource('${source.key}')">
+                            <div class="source-name">${source.name}</div>
+                        </div>
+                        <span class="source-badge badge-priority-${source.priority}">P${source.priority}</span>
+                    </div>
+                    <div class="source-meta">
+                        <span>📍 ${source.jurisdiction}</span>
+                        <span>📊 ${source.records}</span>
+                        <span>🔌 ${source.type}</span>
+                    </div>
+                    <div class="source-tags">
+                        ${source.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            updateSelectedCount();
+        }
+
+        function toggleSource(key) {
+            if (selectedSources.has(key)) {
+                selectedSources.delete(key);
+            } else {
+                selectedSources.add(key);
+            }
+            renderSources();
+        }
+
+        function selectAll() {
+            HSE_SOURCES.forEach(s => selectedSources.add(s.key));
+            renderSources();
+            log('info', `☑️ ${selectedSources.size} sources sélectionnées`);
+        }
+
+        function selectPriority(maxPriority) {
+            selectedSources.clear();
+            HSE_SOURCES.filter(s => s.priority <= maxPriority).forEach(s => selectedSources.add(s.key));
+            renderSources();
+            log('info', `🎯 ${selectedSources.size} sources priorité ≤${maxPriority} sélectionnées`);
+        }
+
+        function filterSources(filter) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderSources(filter);
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selectedCount').textContent = selectedSources.size;
+        }
+
+        // Pipeline execution (simulation)
+        async function runSelectedPipelines() {
+            if (selectedSources.size === 0) {
+                log('warning', '⚠️ Aucune source sélectionnée');
+                return;
+            }
+
+            isRunning = true;
+            document.getElementById('executionModal').classList.add('active');
+            document.getElementById('executionLog').innerHTML = '';
+            document.getElementById('btnCancel').style.display = 'block';
+            document.getElementById('btnClose').style.display = 'none';
+
+            const sources = Array.from(selectedSources);
+            let completed = 0;
+            let totalRows = 0;
+
+            for (const sourceKey of sources) {
+                if (!isRunning) break;
+
+                const source = HSE_SOURCES.find(s => s.key === sourceKey);
+                logExecution('info', `🔄 Démarrage: ${source.name}`);
+
+                // Bronze
+                setStatus('Bronze', 'running');
+                await sleep(800);
+                logExecution('success', `   ✓ Bronze: Données brutes téléchargées`);
+                setStatus('Bronze', 'success');
+
+                // Silver
+                setStatus('Silver', 'running');
+                await sleep(600);
+                logExecution('success', `   ✓ Silver: Transformation appliquée`);
+                setStatus('Silver', 'success');
+
+                // Gold
+                setStatus('Gold', 'running');
+                await sleep(500);
+                const rows = Math.floor(Math.random() * 50000) + 10000;
+                totalRows += rows;
+                logExecution('success', `   ✓ Gold: ${rows.toLocaleString()} rows harmonisés`);
+                setStatus('Gold', 'success');
+
+                completed++;
+                updateProgress(completed / sources.length * 100);
+            }
+
+            if (isRunning) {
+                logExecution('success', `\n✅ Pipeline terminé: ${completed} sources, ${totalRows.toLocaleString()} rows total`);
+                document.getElementById('totalRows').textContent = totalRows.toLocaleString();
+                document.getElementById('lastRun').textContent = new Date().toLocaleTimeString();
+            }
+
+            document.getElementById('btnCancel').style.display = 'none';
+            document.getElementById('btnClose').style.display = 'block';
+            isRunning = false;
+        }
+
+        async function mergeGoldTables() {
+            log('info', '🔗 Fusion des tables Gold...');
+            setStatus('Gold', 'running');
+            await sleep(1500);
+            setStatus('Gold', 'success');
+            log('success', '✅ Tables Gold fusionnées: hse_incidents_global.parquet');
+        }
+
+        async function loadToPostgres() {
+            log('info', '🐘 Chargement vers PostgreSQL Safety Graph...');
+            setStatus('Postgres', 'running');
+            await sleep(2000);
+            setStatus('Postgres', 'success');
+            log('success', '✅ Données chargées dans hse_incidents_global');
+        }
+
+        function cancelExecution() {
+            isRunning = false;
+            logExecution('warning', '⚠️ Exécution annulée par l\'utilisateur');
+            document.getElementById('btnCancel').style.display = 'none';
+            document.getElementById('btnClose').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('executionModal').classList.remove('active');
+            resetStatus();
+        }
+
+        // Status management
+        function setStatus(stage, status) {
+            const el = document.getElementById(`status${stage}`);
+            el.className = `status-badge status-${status}`;
+            const labels = { pending: 'En attente', running: 'En cours...', success: 'Terminé', error: 'Erreur' };
+            el.textContent = labels[status];
+        }
+
+        function resetStatus() {
+            ['Bronze', 'Silver', 'Gold', 'Postgres'].forEach(s => setStatus(s, 'pending'));
+            updateProgress(0);
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = `${percent}%`;
+            document.getElementById('progressPercent').textContent = `${Math.round(percent)}%`;
+        }
+
+        // Logging
+        function log(type, message) {
+            const console = document.getElementById('console');
+            const time = new Date().toLocaleTimeString();
+            console.innerHTML += `<div class="console-line"><span class="console-time">${time}</span><span class="console-${type}">${message}</span></div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function logExecution(type, message) {
+            const log = document.getElementById('executionLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div class="console-line"><span class="console-time">${time}</span><span class="console-${type}">${message}</span></div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = `<div class="console-line"><span class="console-time">${new Date().toLocaleTimeString()}</span><span class="console-info">Console effacée</span></div>`;
+        }
+
+        // Utilities
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

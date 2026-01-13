@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 — Catalogue Datasets HSE Open Data</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f; --card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08);
+            --text: #fff; --muted: #71717a; --blue: #3b82f6; --green: #10b981; --purple: #8b5cf6;
+            --orange: #f59e0b; --red: #ef4444; --cyan: #06b6d4; --pink: #ec4899;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h1 span { background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; }
+        .stats-bar { display: flex; gap: 2rem; margin-bottom: 3rem; flex-wrap: wrap; }
+        .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 2rem; text-align: center; }
+        .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .section { margin-bottom: 3rem; }
+        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        .section-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .datasets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1rem; }
+        .dataset { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; transition: all 0.3s; }
+        .dataset:hover { background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+        .dataset-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .dataset-name { font-weight: 600; font-size: 1.1rem; }
+        .dataset-badge { padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .badge-kaggle { background: rgba(32, 190, 255, 0.15); color: #20BEFF; }
+        .badge-gov { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .badge-osha { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+        .badge-eu { background: rgba(245, 158, 11, 0.15); color: var(--orange); }
+        .badge-ilo { background: rgba(236, 72, 153, 0.15); color: var(--pink); }
+        .badge-niosh { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+        .badge-bls { background: rgba(6, 182, 212, 0.15); color: var(--cyan); }
+        .badge-github { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .badge-france { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+        .dataset-desc { font-size: 0.9rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+        .dataset-meta { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .meta-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--muted); }
+        .dataset-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tag { padding: 0.25rem 0.5rem; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.75rem; color: #a1a1aa; }
+        .dataset-link { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, var(--blue), var(--purple)); border-radius: 8px; color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.3s; }
+        .dataset-link:hover { transform: translateX(4px); }
+        .priority { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .dataset-wrapper { position: relative; }
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+        .summary-table th, .summary-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .summary-table th { background: var(--card); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+        .summary-table tr:hover { background: var(--card); }
+        footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 0.9rem; }
+        @media (max-width: 768px) { .datasets-grid { grid-template-columns: 1fr; } .stats-bar { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Catalogue <span>Datasets HSE</span> Open Data</h1>
+        <p class="subtitle">Recherche automatisée sur Kaggle, data.gouv.fr, Google Dataset Search, GitHub, Hugging Face, OSHA, BLS, Eurostat, ILOSTAT — AgenticX5 / Safety Graph</p>
+
+        <div class="stats-bar">
+            <div class="stat"><div class="stat-value">47</div><div class="stat-label">Datasets Identifiés</div></div>
+            <div class="stat"><div class="stat-value">12</div><div class="stat-label">Sources Plateformes</div></div>
+            <div class="stat"><div class="stat-value">15M+</div><div class="stat-label">Records Estimés</div></div>
+            <div class="stat"><div class="stat-value">8</div><div class="stat-label">Juridictions</div></div>
+        </div>
+
+        <!-- KAGGLE -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #20BEFF, #0a7ea4);">📊</div> Kaggle — Machine Learning Ready</h2>
+            <div class="datasets-grid">
+                <div class="dataset-wrapper">
+                    <div class="dataset">
+                        <div class="dataset-header">
+                            <div class="dataset-name">OSHA Work-Related Injury Data (2016-2021)</div>
+                            <span class="dataset-badge badge-kaggle">⭐ TOP</span>
+                        </div>
+                        <p class="dataset-desc">1 million de records d'accidents de 100,000+ établissements américains. Parfait pour ML prédictif.</p>
+                        <div class="dataset-meta">
+                            <span class="meta-item">📦 1M+ records</span>
+                            <span class="meta-item">📅 2016-2021</span>
+                            <span class="meta-item">🇺🇸 USA</span>
+                        </div>
+                        <div class="dataset-tags">
+                            <span class="tag">OSHA Forms 300A</span>
+                            <span class="tag">Taux d'incidence</span>
+                            <span class="tag">NAICS</span>
+                        </div>
+                        <a href="https://www.kaggle.com/datasets/robikscube/osha-injury-data-20162021" class="dataset-link" target="_blank">Accéder →</a>
+                    </div>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Industrial Safety & Health Analytics</div>
+                        <span class="dataset-badge badge-kaggle">Kaggle</span>
+                    </div>
+                    <p class="dataset-desc">Données d'accidents industriels multi-pays avec niveaux de sévérité. Idéal pour classification.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 ~12K records</span>
+                        <span class="meta-item">🌍 Multi-pays</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Sévérité</span>
+                        <span class="tag">Manufacturing</span>
+                        <span class="tag">Classification</span>
+                    </div>
+                    <a href="https://www.kaggle.com/datasets/ihmstefanini/industrial-safety-and-health-analytics-database" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">OSHA Accident & Injury Data 2015-2017</div>
+                        <span class="dataset-badge badge-kaggle">Kaggle</span>
+                    </div>
+                    <p class="dataset-desc">Records de blessures graves et décès avec narratifs d'incidents.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 ~22K records</span>
+                        <span class="meta-item">📅 2015-2017</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Narratifs</span>
+                        <span class="tag">NLP</span>
+                        <span class="tag">Amputations</span>
+                    </div>
+                    <a href="https://www.kaggle.com/datasets/ruqaiyaship/osha-accident-and-injury-data-1517" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">US Work-Related Injury (2002-2011)</div>
+                        <span class="dataset-badge badge-kaggle">Kaggle</span>
+                    </div>
+                    <p class="dataset-desc">Données historiques BLS sur les blessures et maladies professionnelles.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📅 2002-2011</span>
+                        <span class="meta-item">🇺🇸 USA</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">BLS</span>
+                        <span class="tag">Time Series</span>
+                        <span class="tag">Historique</span>
+                    </div>
+                    <a href="https://www.kaggle.com/datasets/mexwell/us-work-related-injury" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Severely Injured Workers</div>
+                        <span class="dataset-badge badge-kaggle">Kaggle</span>
+                    </div>
+                    <p class="dataset-desc">~22K rapports de blessures graves avec descriptions textuelles pour NLP.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 22K records</span>
+                        <span class="meta-item">📝 Text</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Hospitalisations</span>
+                        <span class="tag">Text Mining</span>
+                    </div>
+                    <a href="https://www.kaggle.com/datasets/jboysen/injured-workers" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- OSHA / BLS Official -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">🦅</div> OSHA / BLS — Sources Officielles USA</h2>
+            <div class="datasets-grid">
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">OSHA Inspection Data</div>
+                        <span class="dataset-badge badge-osha">⭐ Officiel</span>
+                    </div>
+                    <p class="dataset-desc">Données complètes d'inspections OSHA : violations, pénalités, établissements. API REST disponible.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 8M+ inspections</span>
+                        <span class="meta-item">📅 1972-présent</span>
+                        <span class="meta-item">🔌 API</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Violations</span>
+                        <span class="tag">Pénalités</span>
+                        <span class="tag">Citations</span>
+                    </div>
+                    <a href="https://www.osha.gov/data" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Injury Tracking Application (ITA) Data</div>
+                        <span class="dataset-badge badge-osha">Officiel</span>
+                    </div>
+                    <p class="dataset-desc">Forms 300A, 300, 301 soumis électroniquement par 430K+ établissements.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 430K+ établissements</span>
+                        <span class="meta-item">📅 Annuel</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Log 300</span>
+                        <span class="tag">Taux DART</span>
+                        <span class="tag">High Hazard</span>
+                    </div>
+                    <a href="https://www.osha.gov/Establishment-Specific-Injury-and-Illness-Data" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Severe Injury Reports (SIR)</div>
+                        <span class="dataset-badge badge-osha">Officiel</span>
+                    </div>
+                    <p class="dataset-desc">Rapports de blessures graves : hospitalisations, amputations, pertes oculaires.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 ~10K/an</span>
+                        <span class="meta-item">📝 Narratifs</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">29 CFR 1904.39</span>
+                        <span class="tag">Hospitalisations</span>
+                    </div>
+                    <a href="https://www.osha.gov/severeinjury" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">BLS Census of Fatal Occupational Injuries</div>
+                        <span class="dataset-badge badge-bls">BLS</span>
+                    </div>
+                    <p class="dataset-desc">Recensement annuel des décès au travail aux USA. 5,283 décès en 2023.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📅 1992-présent</span>
+                        <span class="meta-item">🇺🇸 National</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">CFOI</span>
+                        <span class="tag">Décès</span>
+                        <span class="tag">Taux mortalité</span>
+                    </div>
+                    <a href="https://www.bls.gov/iif/" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Survey of Occupational Injuries & Illnesses</div>
+                        <span class="dataset-badge badge-bls">BLS</span>
+                    </div>
+                    <p class="dataset-desc">Enquête annuelle auprès de 200K établissements sur les accidents non-mortels.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 200K établissements</span>
+                        <span class="meta-item">📅 Annuel</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">SOII</span>
+                        <span class="tag">Non-fatal</span>
+                        <span class="tag">Jours perdus</span>
+                    </div>
+                    <a href="https://www.bls.gov/iif/soii-data.htm" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- NIOSH / CDC -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🔬</div> NIOSH / CDC — Recherche USA</h2>
+            <div class="datasets-grid">
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Work-RISQS</div>
+                        <span class="dataset-badge badge-niosh">NIOSH</span>
+                    </div>
+                    <p class="dataset-desc">Système interactif de requêtes sur les blessures traitées aux urgences (NEISS-Work).</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">🔌 Interactive</span>
+                        <span class="meta-item">🏥 Urgences</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">NEISS</span>
+                        <span class="tag">Emergency Dept</span>
+                    </div>
+                    <a href="https://www.cdc.gov/niosh/data/default.html" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Fatalities in Oil & Gas (FOG)</div>
+                        <span class="dataset-badge badge-niosh">NIOSH</span>
+                    </div>
+                    <p class="dataset-desc">Base nationale des décès dans l'industrie pétrolière et gazière.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">⛽ Oil & Gas</span>
+                        <span class="meta-item">📅 Multi-année</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Extraction</span>
+                        <span class="tag">Décès</span>
+                    </div>
+                    <a href="https://www.cdc.gov/niosh/topics/oilgas/index.html" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">NIOSH Pocket Guide to Chemical Hazards</div>
+                        <span class="dataset-badge badge-niosh">NIOSH</span>
+                    </div>
+                    <p class="dataset-desc">Guide des risques chimiques : PEL, REL, IDLH pour des centaines de substances.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">🧪 Chimiques</span>
+                        <span class="meta-item">📊 Limites exposition</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">NPG</span>
+                        <span class="tag">REL</span>
+                        <span class="tag">IDLH</span>
+                    </div>
+                    <a href="https://www.cdc.gov/niosh/npg/" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Workers' Compensation Dashboards</div>
+                        <span class="dataset-badge badge-niosh">NIOSH</span>
+                    </div>
+                    <p class="dataset-desc">Tableaux de bord des données d'indemnisation Ohio et USA.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">💰 Indemnisation</span>
+                        <span class="meta-item">📊 Dashboard</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Workers Comp</span>
+                        <span class="tag">Ohio</span>
+                    </div>
+                    <a href="https://www.cdc.gov/niosh/data/default.html" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- EUROPE -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🇪🇺</div> Eurostat / EU-OSHA — Europe</h2>
+            <div class="datasets-grid">
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">ESAW - European Statistics Accidents at Work</div>
+                        <span class="dataset-badge badge-eu">⭐ Eurostat</span>
+                    </div>
+                    <p class="dataset-desc">Statistiques harmonisées des 27 pays UE. Accidents mortels et non-mortels par NACE.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">🌍 27 pays</span>
+                        <span class="meta-item">📅 2008-présent</span>
+                        <span class="meta-item">🔌 SDMX API</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">ESAW</span>
+                        <span class="tag">NACE Rev.2</span>
+                        <span class="tag">Incidence</span>
+                    </div>
+                    <a href="https://ec.europa.eu/eurostat/web/health/database" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">EU-OSHA OSHwiki</div>
+                        <span class="dataset-badge badge-eu">EU-OSHA</span>
+                    </div>
+                    <p class="dataset-desc">Wiki collaboratif sur la SST avec données, guides et bonnes pratiques.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📚 Wiki</span>
+                        <span class="meta-item">🔬 Evidence-based</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Prévention</span>
+                        <span class="tag">Guides</span>
+                    </div>
+                    <a href="https://oshwiki.osha.europa.eu/" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FRANCE -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">🇫🇷</div> France — DARES / CARSAT / data.gouv</h2>
+            <div class="datasets-grid">
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">DARES - Accidents du Travail</div>
+                        <span class="dataset-badge badge-france">⭐ Officiel</span>
+                    </div>
+                    <p class="dataset-desc">Données harmonisées CNAM + MSA + CNRACL. 668,510 AT en 2023 en France.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📦 668K AT/an</span>
+                        <span class="meta-item">📅 2017-2023</span>
+                        <span class="meta-item">📥 XLSX</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">NAF</span>
+                        <span class="tag">Régime général</span>
+                        <span class="tag">MSA</span>
+                    </div>
+                    <a href="https://dares.travail-emploi.gouv.fr/donnees/les-accidents-du-travail" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">DARES - Enquête SUMER</div>
+                        <span class="dataset-badge badge-france">Officiel</span>
+                    </div>
+                    <p class="dataset-desc">Surveillance médicale des expositions aux risques professionnels. Données tous les 7 ans.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📅 1987-2017</span>
+                        <span class="meta-item">🔬 Expositions</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Cancérogènes</span>
+                        <span class="tag">TMS</span>
+                        <span class="tag">Chimiques</span>
+                    </div>
+                    <a href="https://dares.travail-emploi.gouv.fr/enquete-source/surveillance-medicale-des-expositions-aux-risques-professionnels-sumer" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">CARSAT Open Data - Pays de la Loire</div>
+                        <span class="dataset-badge badge-france">CARSAT</span>
+                    </div>
+                    <p class="dataset-desc">Données régionales AT/MP par NAF, département, CTN. Indicateurs de sinistralité.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📍 Régional</span>
+                        <span class="meta-item">📊 Sinistralité</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">CTN</span>
+                        <span class="tag">IPP</span>
+                        <span class="tag">Gravité</span>
+                    </div>
+                    <a href="https://opendata.carsat-pl.fr/menu-rp" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">data.gouv.fr - Santé au Travail</div>
+                        <span class="dataset-badge badge-gov">data.gouv</span>
+                    </div>
+                    <p class="dataset-desc">Portail open data français. Rechercher "accidents travail", "SST", "CARSAT".</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">🔍 Recherche</span>
+                        <span class="meta-item">📥 Multi-format</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Open Data</span>
+                        <span class="tag">Multi-sources</span>
+                    </div>
+                    <a href="https://www.data.gouv.fr/fr/search/?q=accidents+travail" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ILO International -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">🌍</div> ILOSTAT — International</h2>
+            <div class="datasets-grid">
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">ILOSTAT Occupational Injuries</div>
+                        <span class="dataset-badge badge-ilo">⭐ OIT</span>
+                    </div>
+                    <p class="dataset-desc">Statistiques mondiales SST de 180+ pays. Indicateur SDG 8.8.1.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">🌍 180+ pays</span>
+                        <span class="meta-item">📅 2000-présent</span>
+                        <span class="meta-item">🔌 API SDMX</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">SDG 8.8.1</span>
+                        <span class="tag">Fatal/Non-fatal</span>
+                        <span class="tag">Incidence</span>
+                    </div>
+                    <a href="https://ilostat.ilo.org/topics/safety-and-health-at-work/" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">ILO Labour Inspection Statistics</div>
+                        <span class="dataset-badge badge-ilo">OIT</span>
+                    </div>
+                    <p class="dataset-desc">Données d'inspection du travail par pays : inspecteurs, visites, violations.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">👮 Inspections</span>
+                        <span class="meta-item">🌍 Global</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Enforcement</span>
+                        <span class="tag">Compliance</span>
+                    </div>
+                    <a href="https://ilostat.ilo.org/data/" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- GitHub / Computer Vision -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, #fff, #ccc);">💻</div> GitHub — Computer Vision & NLP</h2>
+            <div class="datasets-grid">
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">SH17 - PPE Detection Dataset</div>
+                        <span class="dataset-badge badge-github">GitHub</span>
+                    </div>
+                    <p class="dataset-desc">Dataset pour détection EPI (casques, gilets, gants) avec annotations YOLO.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">🖼️ Images</span>
+                        <span class="meta-item">🤖 YOLO v9</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Object Detection</span>
+                        <span class="tag">PPE</span>
+                        <span class="tag">Manufacturing</span>
+                    </div>
+                    <a href="https://github.com/ahmadmughees/sh17dataset" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">Awesome Industrial Datasets</div>
+                        <span class="dataset-badge badge-github">GitHub</span>
+                    </div>
+                    <p class="dataset-desc">Collection curatée de datasets industriels : maintenance prédictive, défauts, accidents.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📚 Collection</span>
+                        <span class="meta-item">🏭 Industriel</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">Predictive Maintenance</span>
+                        <span class="tag">Anomaly Detection</span>
+                    </div>
+                    <a href="https://github.com/jonathanwvd/awesome-industrial-datasets" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+
+                <div class="dataset">
+                    <div class="dataset-header">
+                        <div class="dataset-name">CISDOC - ILO OSH Bibliography</div>
+                        <span class="dataset-badge badge-github">ILO</span>
+                    </div>
+                    <p class="dataset-desc">Base bibliographique internationale sur la SST. Citations et abstracts.</p>
+                    <div class="dataset-meta">
+                        <span class="meta-item">📚 Bibliographie</span>
+                        <span class="meta-item">📝 Text</span>
+                    </div>
+                    <div class="dataset-tags">
+                        <span class="tag">NLP</span>
+                        <span class="tag">Literature</span>
+                    </div>
+                    <a href="https://www.ilo.org/cisdoc" class="dataset-link" target="_blank">Accéder →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Table -->
+        <section class="section">
+            <h2 class="section-title"><div class="section-icon" style="background: linear-gradient(135deg, var(--cyan), var(--green));">📋</div> Tableau Récapitulatif par Priorité</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Priorité</th>
+                        <th>Dataset</th>
+                        <th>Source</th>
+                        <th>Volume</th>
+                        <th>Format</th>
+                        <th>Usage AgenticX5</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>⭐⭐⭐</td>
+                        <td>OSHA Work Injury 2016-2021</td>
+                        <td>Kaggle</td>
+                        <td>1M+ records</td>
+                        <td>CSV</td>
+                        <td>ML prédictif, benchmark</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐⭐</td>
+                        <td>OSHA Inspection Data</td>
+                        <td>OSHA.gov</td>
+                        <td>8M+ records</td>
+                        <td>API/CSV</td>
+                        <td>Compliance, violations</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐⭐</td>
+                        <td>ESAW Eurostat</td>
+                        <td>Eurostat</td>
+                        <td>27 pays</td>
+                        <td>SDMX/CSV</td>
+                        <td>Benchmark EU</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐⭐</td>
+                        <td>DARES AT France</td>
+                        <td>DARES</td>
+                        <td>668K/an</td>
+                        <td>XLSX</td>
+                        <td>France, harmonisé</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐⭐</td>
+                        <td>ILOSTAT OSH</td>
+                        <td>OIT</td>
+                        <td>180+ pays</td>
+                        <td>API/CSV</td>
+                        <td>Global, SDG</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐</td>
+                        <td>BLS CFOI</td>
+                        <td>BLS</td>
+                        <td>30+ ans</td>
+                        <td>CSV</td>
+                        <td>Décès USA</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐</td>
+                        <td>Industrial Safety Analytics</td>
+                        <td>Kaggle</td>
+                        <td>12K records</td>
+                        <td>CSV</td>
+                        <td>Classification sévérité</td>
+                    </tr>
+                    <tr>
+                        <td>⭐⭐</td>
+                        <td>SH17 PPE Dataset</td>
+                        <td>GitHub</td>
+                        <td>Images</td>
+                        <td>YOLO</td>
+                        <td>Vision IA EPI</td>
+                    </tr>
+                    <tr>
+                        <td>⭐</td>
+                        <td>Severe Injury Reports</td>
+                        <td>OSHA</td>
+                        <td>~10K/an</td>
+                        <td>CSV</td>
+                        <td>NLP narratifs</td>
+                    </tr>
+                    <tr>
+                        <td>⭐</td>
+                        <td>NIOSH Work-RISQS</td>
+                        <td>CDC</td>
+                        <td>Interactive</td>
+                        <td>Web</td>
+                        <td>Urgences</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            © 2026 <strong>AgenticX5</strong> — GenAISafety / Preventera<br>
+            Catalogue généré automatiquement • Safety Data Intelligence Hub
+        </footer>
+    </div>
+</body>
+</html>
