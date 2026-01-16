@@ -26,6 +26,7 @@ from datetime import datetime
 import logging
 
 from sqlalchemy import create_engine, text
+from api.auth import router as auth_router
 from neo4j import GraphDatabase
 import pandas as pd
 
@@ -47,6 +48,7 @@ app = FastAPI(
 )
 
 # CORS
+app.include_router(auth_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

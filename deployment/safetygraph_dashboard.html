@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafetyGraph - Dashboard CNESST</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; min-height: 100vh; }
+        .header { background: linear-gradient(90deg, #0f3460, #533483); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .header .subtitle { color: #a0a0a0; font-size: 14px; }
+        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #00d9ff, #00ff88); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stats-bar { display: flex; gap: 20px; padding: 20px 40px; background: rgba(255,255,255,0.05); }
+        .stat-card { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-value { font-size: 32px; font-weight: bold; color: #00d9ff; }
+        .stat-label { color: #a0a0a0; margin-top: 5px; }
+        .stat-change { font-size: 12px; margin-top: 5px; }
+        .stat-change.positive { color: #00ff88; }
+        .stat-change.negative { color: #ff6b6b; }
+        .main-content { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; padding: 20px 40px; }
+        .chart-container { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .chart-title { font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .chart-title::before { content: '📊'; }
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .risk-list { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .risk-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin: 8px 0; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid; }
+        .risk-item.critical { border-color: #ff6b6b; }
+        .risk-item.high { border-color: #ffa500; }
+        .risk-item.medium { border-color: #ffdd57; }
+        .risk-item.low { border-color: #00ff88; }
+        .risk-name { font-weight: 500; }
+        .risk-count { font-size: 20px; font-weight: bold; }
+        .sector-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .sector-card { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s; }
+        .sector-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.12); }
+        .sector-name { font-size: 14px; color: #a0a0a0; }
+        .sector-value { font-size: 24px; font-weight: bold; margin: 5px 0; }
+        .sector-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 10px; }
+        .sector-bar-fill { height: 100%; border-radius: 3px; }
+        .neo4j-section { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin: 20px 40px; border: 1px solid rgba(255,255,255,0.1); }
+        .graph-preview { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+        .node { display: inline-flex; flex-direction: column; align-items: center; margin: 10px; }
+        .node-circle { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; text-align: center; }
+        .node-label { margin-top: 5px; font-size: 11px; color: #a0a0a0; }
+        .node.secteur .node-circle { background: linear-gradient(135deg, #533483, #0f3460); }
+        .node.risque .node-circle { background: linear-gradient(135deg, #ff6b6b, #ffa500); }
+        .connection-line { position: absolute; height: 2px; background: rgba(255,255,255,0.3); }
+        footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        .live-indicator { display: flex; align-items: center; gap: 8px; }
+        .live-dot { width: 10px; height: 10px; background: #00ff88; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <div>
+                <h1>SafetyGraph Dashboard</h1>
+                <div class="subtitle">Données CNESST - 793K+ incidents analysés</div>
+            </div>
+        </div>
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>Connecté à Neo4j + PostgreSQL</span>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">226,664</div>
+            <div class="stat-label">Total Lésions (4 ans)</div>
+            <div class="stat-change negative">↑ 3.2% vs 2022</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">1.15M</div>
+            <div class="stat-label">Jours Perdus</div>
+            <div class="stat-change negative">↑ 2.8% vs 2022</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">8</div>
+            <div class="stat-label">Secteurs Analysés</div>
+            <div class="stat-change positive">SCIAN harmonisé</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">5.1j</div>
+            <div class="stat-label">Gravité Moyenne</div>
+            <div class="stat-change">jours/lésion</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-container">
+            <div class="chart-title">Lésions par Secteur SCIAN (2020-2023)</div>
+            <canvas id="sectorChart" height="300"></canvas>
+        </div>
+        <div class="sidebar">
+            <div class="risk-list">
+                <div class="chart-title" style="margin-bottom:15px;">🎯 Top Risques par Gravité</div>
+                <div class="risk-item critical">
+                    <div>
+                        <div class="risk-name">⚡ Électricité</div>
+                        <small style="color:#888">SCIAN 221122</small>
+                    </div>
+                    <div class="risk-count">5</div>
+                </div>
+                <div class="risk-item critical">
+                    <div>
+                        <div class="risk-name">🪜 Chutes hauteur</div>
+                        <small style="color:#888">Construction</small>
+                    </div>
+                    <div class="risk-count">5</div>
+                </div>
+                <div class="risk-item high">
+                    <div>
+                        <div class="risk-name">⚙️ Machines</div>
+                        <small style="color:#888">Fabrication</small>
+                    </div>
+                    <div class="risk-count">4</div>
+                </div>
+                <div class="risk-item high">
+                    <div>
+                        <div class="risk-name">🚗 Véhicules</div>
+                        <small style="color:#888">Transport</small>
+                    </div>
+                    <div class="risk-count">4</div>
+                </div>
+                <div class="risk-item medium">
+                    <div>
+                        <div class="risk-name">💪 TMS/Ergonomie</div>
+                        <small style="color:#888">Multi-secteur</small>
+                    </div>
+                    <div class="risk-count">3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-container">
+            <div class="chart-title">📈 Tendances Annuelles par Type de Lésion</div>
+            <canvas id="trendChart" height="250"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">🔥 Focus: Distribution Électricité (221122)</div>
+            <canvas id="hqChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <div class="neo4j-section">
+        <div class="chart-title">🔗 Knowledge Graph - Relations Secteurs ↔ Risques</div>
+        <div class="graph-preview">
+            <div class="node secteur">
+                <div class="node-circle">221122<br>HQ</div>
+                <div class="node-label">Distribution élec.</div>
+            </div>
+            <div style="color:#00d9ff;font-size:24px;margin:0 20px;">→</div>
+            <div class="node risque">
+                <div class="node-circle">ELEC</div>
+                <div class="node-label">Électricité</div>
+            </div>
+            <div style="color:#00d9ff;font-size:24px;margin:0 10px;">|</div>
+            <div class="node risque">
+                <div class="node-circle">CHUTE</div>
+                <div class="node-label">Chutes</div>
+            </div>
+            <div style="color:#00d9ff;font-size:24px;margin:0 10px;">|</div>
+            <div class="node risque">
+                <div class="node-circle">ARC</div>
+                <div class="node-label">Arc Flash</div>
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:15px;">
+            <a href="http://localhost:7475" target="_blank" style="color:#00d9ff;text-decoration:none;padding:10px 20px;border:1px solid #00d9ff;border-radius:8px;">
+                Ouvrir Neo4j Browser →
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-container">
+            <div class="chart-title">🏭 Détail par Secteur</div>
+            <div class="sector-grid">
+                <div class="sector-card">
+                    <div class="sector-name">62 - Soins de santé</div>
+                    <div class="sector-value" style="color:#ff6b6b">83,443</div>
+                    <div class="sector-bar"><div class="sector-bar-fill" style="width:100%;background:#ff6b6b"></div></div>
+                </div>
+                <div class="sector-card">
+                    <div class="sector-name">31-33 - Fabrication</div>
+                    <div class="sector-value" style="color:#ffa500">48,253</div>
+                    <div class="sector-bar"><div class="sector-bar-fill" style="width:58%;background:#ffa500"></div></div>
+                </div>
+                <div class="sector-card">
+                    <div class="sector-name">44-45 - Commerce détail</div>
+                    <div class="sector-value" style="color:#ffdd57">39,929</div>
+                    <div class="sector-bar"><div class="sector-bar-fill" style="width:48%;background:#ffdd57"></div></div>
+                </div>
+                <div class="sector-card">
+                    <div class="sector-name">23 - Construction</div>
+                    <div class="sector-value" style="color:#00d9ff">29,687</div>
+                    <div class="sector-bar"><div class="sector-bar-fill" style="width:36%;background:#00d9ff"></div></div>
+                </div>
+                <div class="sector-card">
+                    <div class="sector-name">48-49 - Transport</div>
+                    <div class="sector-value" style="color:#00ff88">22,427</div>
+                    <div class="sector-bar"><div class="sector-bar-fill" style="width:27%;background:#00ff88"></div></div>
+                </div>
+                <div class="sector-card">
+                    <div class="sector-name">221122 - Hydro-Québec</div>
+                    <div class="sector-value" style="color:#533483">2,925</div>
+                    <div class="sector-bar"><div class="sector-bar-fill" style="width:4%;background:#533483"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">📋 Connexions Base de Données</div>
+            <div style="padding:15px;">
+                <div style="background:rgba(0,255,136,0.1);padding:15px;border-radius:8px;margin-bottom:10px;border-left:4px solid #00ff88;">
+                    <strong>✅ PostgreSQL</strong><br>
+                    <small style="color:#888">localhost:5434 | safetygraph</small><br>
+                    <small>74 enregistrements CNESST</small>
+                </div>
+                <div style="background:rgba(0,217,255,0.1);padding:15px;border-radius:8px;margin-bottom:10px;border-left:4px solid #00d9ff;">
+                    <strong>✅ Neo4j</strong><br>
+                    <small style="color:#888">localhost:7475 | Knowledge Graph</small><br>
+                    <small>8 secteurs, 8 risques, 15+ relations</small>
+                </div>
+                <div style="background:rgba(83,52,131,0.2);padding:15px;border-radius:8px;border-left:4px solid #533483;">
+                    <strong>✅ Harmonisation</strong><br>
+                    <small style="color:#888">hse_harmonizer.py</small><br>
+                    <small>OSHA ↔ ESAW ↔ CNESST</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        SafetyGraph © 2026 | AgenticX5 | GenAISafety | Données: CNESST 793K+ incidents
+    </footer>
+
+    <script>
+        // Chart 1: Secteurs
+        new Chart(document.getElementById('sectorChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Soins santé', 'Fabrication', 'Commerce', 'Construction', 'Transport', 'HQ (221122)'],
+                datasets: [{
+                    label: 'Lésions',
+                    data: [83443, 48253, 39929, 29687, 22427, 2925],
+                    backgroundColor: ['#ff6b6b', '#ffa500', '#ffdd57', '#00d9ff', '#00ff88', '#533483']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } }, x: { grid: { display: false }, ticks: { color: '#fff' } } }
+            }
+        });
+
+        // Chart 2: Tendances
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: ['2020', '2021', '2022', '2023'],
+                datasets: [
+                    { label: 'Chutes', data: [18500, 19200, 18900, 19800], borderColor: '#ff6b6b', tension: 0.3 },
+                    { label: 'TMS', data: [15200, 16100, 16800, 17500], borderColor: '#ffa500', tension: 0.3 },
+                    { label: 'Machines', data: [8900, 9200, 9000, 9400], borderColor: '#00d9ff', tension: 0.3 },
+                    { label: 'Électrique', data: [1200, 1350, 1280, 1400], borderColor: '#533483', tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#fff' } } },
+                scales: { y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } }, x: { grid: { display: false }, ticks: { color: '#fff' } } }
+            }
+        });
+
+        // Chart 3: HQ Detail
+        new Chart(document.getElementById('hqChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Choc électrique', 'Chutes poteaux', 'Véhicules', 'Arc flash', 'TMS'],
+                datasets: [{
+                    data: [958, 766, 456, 239, 506],
+                    backgroundColor: ['#ff6b6b', '#ffa500', '#00d9ff', '#533483', '#00ff88']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'right', labels: { color: '#fff' } } }
+            }
+        });
+    </script>
+</body>
+</html>

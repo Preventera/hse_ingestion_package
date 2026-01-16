@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafetyGraph X5 - Dashboard Complet</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        
+        /* Layout */
+        .app-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: #1e293b; border-right: 1px solid #334155; padding: 20px; position: fixed; height: 100vh; overflow-y: auto; }
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        
+        /* Sidebar */
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+        .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .logo-text { font-size: 20px; font-weight: 700; }
+        .logo-sub { font-size: 11px; color: #64748b; }
+        
+        .nav-section { margin-bottom: 24px; }
+        .nav-title { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 12px; letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+        .nav-item:hover { background: #334155; }
+        .nav-item.active { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+        .nav-icon { font-size: 18px; }
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header-title { font-size: 28px; font-weight: 700; }
+        .header-subtitle { color: #64748b; margin-top: 4px; }
+        .header-actions { display: flex; gap: 12px; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
+        .btn-secondary { background: #334155; color: #e2e8f0; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155; }
+        .stat-card.critical { border-left: 4px solid #ef4444; }
+        .stat-card.warning { border-left: 4px solid #f59e0b; }
+        .stat-card.success { border-left: 4px solid #22c55e; }
+        .stat-card.info { border-left: 4px solid #3b82f6; }
+        .stat-label { font-size: 13px; color: #64748b; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 700; }
+        .stat-change { font-size: 12px; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+        .stat-change.up { color: #ef4444; }
+        .stat-change.down { color: #22c55e; }
+        
+        /* Charts Grid */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .chart-card { background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155; }
+        .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .chart-container { position: relative; height: 300px; }
+        
+        /* Data Table */
+        .table-card { background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155; margin-bottom: 24px; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .table-filters { display: flex; gap: 12px; }
+        .filter-select { background: #334155; border: 1px solid #475569; color: #e2e8f0; padding: 8px 16px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; background: #334155; font-weight: 500; font-size: 13px; color: #94a3b8; }
+        th:first-child { border-radius: 8px 0 0 8px; }
+        th:last-child { border-radius: 0 8px 8px 0; }
+        td { padding: 16px; border-bottom: 1px solid #334155; font-size: 14px; }
+        tr:hover { background: rgba(59, 130, 246, 0.1); }
+        
+        /* Risk Badge */
+        .risk-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .risk-critical { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .risk-high { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .risk-medium { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+        .risk-low { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        
+        /* Agent Cards */
+        .agents-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+        .agent-card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; text-align: center; transition: all 0.3s; }
+        .agent-card:hover { transform: translateY(-4px); border-color: #3b82f6; }
+        .agent-icon { font-size: 32px; margin-bottom: 12px; }
+        .agent-name { font-weight: 600; margin-bottom: 4px; }
+        .agent-status { font-size: 12px; color: #22c55e; }
+        .agent-confidence { font-size: 24px; font-weight: 700; color: #3b82f6; margin-top: 8px; }
+        
+        /* Chat Interface */
+        .chat-card { background: #1e293b; border-radius: 16px; border: 1px solid #334155; height: 400px; display: flex; flex-direction: column; }
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid #334155; font-weight: 600; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
+        .chat-message { margin-bottom: 16px; }
+        .chat-message.user { text-align: right; }
+        .chat-message.assistant { text-align: left; }
+        .chat-bubble { display: inline-block; max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 14px; }
+        .chat-message.user .chat-bubble { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+        .chat-message.assistant .chat-bubble { background: #334155; }
+        .chat-input-container { padding: 16px; border-top: 1px solid #334155; display: flex; gap: 12px; }
+        .chat-input { flex: 1; background: #334155; border: 1px solid #475569; color: #e2e8f0; padding: 12px 16px; border-radius: 8px; }
+        .chat-send { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; }
+        
+        /* Map placeholder */
+        .map-container { background: linear-gradient(135deg, #1e3a5f, #0f172a); border-radius: 12px; height: 300px; display: flex; align-items: center; justify-content: center; }
+        .map-placeholder { text-align: center; color: #64748b; }
+        
+        /* Jurisdiction tabs */
+        .jurisdiction-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .jurisdiction-tab { padding: 8px 20px; border-radius: 20px; background: #334155; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .jurisdiction-tab.active { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+        .jurisdiction-tab:hover { background: #475569; }
+        .jurisdiction-tab.active:hover { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+        
+        /* Loading */
+        .loading { display: flex; align-items: center; justify-content: center; height: 200px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Live indicator */
+        .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        /* Responsive */
+        @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .agents-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1200px) { .charts-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // API Configuration
+        const API_BASE = 'http://localhost:8001/api/v1';
+        
+        // API Helper
+        const api = {
+            async get(endpoint) {
+                try {
+                    const response = await fetch(`${API_BASE}/${endpoint}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('API Error:', error);
+                    return null;
+                }
+            }
+        };
+        
+        // Sidebar Component
+        function Sidebar({ activeTab, setActiveTab }) {
+            const navItems = [
+                { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+                { id: 'analysis', icon: '🔍', label: 'Analyse' },
+                { id: 'agents', icon: '🤖', label: 'Agents X5' },
+                { id: 'comparison', icon: '🌍', label: 'Multi-Juridictions' },
+                { id: 'chat', icon: '💬', label: 'Assistant IA' },
+            ];
+            
+            return (
+                <div className="sidebar">
+                    <div className="logo">
+                        <div className="logo-icon">⚡</div>
+                        <div>
+                            <div className="logo-text">SafetyGraph X5</div>
+                            <div className="logo-sub">AgenticX5 Platform</div>
+                        </div>
+                    </div>
+                    
+                    <div className="nav-section">
+                        <div className="nav-title">Navigation</div>
+                        {navItems.map(item => (
+                            <div 
+                                key={item.id}
+                                className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+                                onClick={() => setActiveTab(item.id)}
+                            >
+                                <span className="nav-icon">{item.icon}</span>
+                                <span>{item.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="nav-section">
+                        <div className="nav-title">Connexions</div>
+                        <div className="nav-item">
+                            <span className="live-dot"></span>
+                            <span>PostgreSQL</span>
+                        </div>
+                        <div className="nav-item">
+                            <span className="live-dot"></span>
+                            <span>Neo4j</span>
+                        </div>
+                        <div className="nav-item">
+                            <span className="live-dot"></span>
+                            <span>API FastAPI</span>
+                        </div>
+                    </div>
+                    
+                    <div className="nav-section">
+                        <div className="nav-title">Sources</div>
+                        <div className="nav-item">🍁 CNESST (Quebec)</div>
+                        <div className="nav-item">🇺🇸 OSHA (USA)</div>
+                        <div className="nav-item">🇪🇺 EU-OSHA (Europe)</div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Stats Card Component
+        function StatsCard({ label, value, change, type, icon }) {
+            return (
+                <div className={`stat-card ${type}`}>
+                    <div className="stat-label">{icon} {label}</div>
+                    <div className="stat-value">{value}</div>
+                    {change && (
+                        <div className={`stat-change ${change > 0 ? 'up' : 'down'}`}>
+                            {change > 0 ? '↑' : '↓'} {Math.abs(change)}% vs 2022
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        
+        // Dashboard Tab
+        function DashboardTab({ stats, sectorData }) {
+            return (
+                <div>
+                    <div className="header">
+                        <div>
+                            <h1 className="header-title">Dashboard SafetyGraph</h1>
+                            <p className="header-subtitle">Vue d'ensemble des donnees HSE harmonisees</p>
+                        </div>
+                        <div className="header-actions">
+                            <button className="btn btn-secondary">Exporter</button>
+                            <button className="btn btn-primary">Actualiser</button>
+                        </div>
+                    </div>
+                    
+                    <div className="stats-grid">
+                        <StatsCard 
+                            label="Total Incidents" 
+                            value={stats?.combined_incidents?.toLocaleString() || '1,826,763'} 
+                            change={3.2} 
+                            type="critical"
+                            icon="📊"
+                        />
+                        <StatsCard 
+                            label="CNESST (Quebec)" 
+                            value={stats?.cnesst?.total_lesions?.toLocaleString() || '355,393'} 
+                            change={2.8} 
+                            type="info"
+                            icon="🍁"
+                        />
+                        <StatsCard 
+                            label="OSHA (USA)" 
+                            value={stats?.osha?.total_cases?.toLocaleString() || '1,471,370'} 
+                            change={1.5} 
+                            type="warning"
+                            icon="🇺🇸"
+                        />
+                        <StatsCard 
+                            label="Deces" 
+                            value={stats?.osha?.total_deaths?.toLocaleString() || '5,132'} 
+                            change={-2.1} 
+                            type="success"
+                            icon="⚠️"
+                        />
+                    </div>
+                    
+                    <div className="charts-grid">
+                        <div className="chart-card">
+                            <div className="chart-title">📈 Incidents par Secteur SCIAN</div>
+                            <div className="chart-container">
+                                <canvas id="sectorChart"></canvas>
+                            </div>
+                        </div>
+                        <div className="chart-card">
+                            <div className="chart-title">🎯 Repartition par Risque</div>
+                            <div className="chart-container">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="table-card">
+                        <div className="table-header">
+                            <div className="chart-title">📋 Top Secteurs a Risque</div>
+                            <div className="table-filters">
+                                <select className="filter-select">
+                                    <option>Toutes sources</option>
+                                    <option>CNESST</option>
+                                    <option>OSHA</option>
+                                    <option>EU-OSHA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Secteur</th>
+                                    <th>Code SCIAN</th>
+                                    <th>Incidents</th>
+                                    <th>Deces</th>
+                                    <th>Risque</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Soins de sante</td>
+                                    <td>62</td>
+                                    <td>496,600</td>
+                                    <td>125</td>
+                                    <td><span className="risk-badge risk-high">HIGH</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Construction</td>
+                                    <td>23</td>
+                                    <td>212,000</td>
+                                    <td>1,684</td>
+                                    <td><span className="risk-badge risk-critical">CRITICAL</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Fabrication</td>
+                                    <td>31-33</td>
+                                    <td>253,000</td>
+                                    <td>204</td>
+                                    <td><span className="risk-badge risk-high">HIGH</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Distribution Electrique</td>
+                                    <td>221122</td>
+                                    <td>10,870</td>
+                                    <td>451</td>
+                                    <td><span className="risk-badge risk-critical">CRITICAL</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Transport</td>
+                                    <td>48-49</td>
+                                    <td>289,000</td>
+                                    <td>1,902</td>
+                                    <td><span className="risk-badge risk-critical">CRITICAL</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Agents Tab
+        function AgentsTab() {
+            const agents = [
+                { name: 'Analyse', icon: '🔍', status: 'Actif', confidence: 85 },
+                { name: 'Prediction', icon: '🔮', status: 'Actif', confidence: 78 },
+                { name: 'Recommandation', icon: '💡', status: 'Actif', confidence: 82 },
+                { name: 'Conformite', icon: '📋', status: 'Actif', confidence: 90 },
+                { name: 'Benchmarking', icon: '📊', status: 'Actif', confidence: 80 },
+            ];
+            
+            return (
+                <div>
+                    <div className="header">
+                        <div>
+                            <h1 className="header-title">Agents AgenticX5</h1>
+                            <p className="header-subtitle">Systeme multi-agents IA pour prevention SST</p>
+                        </div>
+                    </div>
+                    
+                    <div className="agents-grid">
+                        {agents.map(agent => (
+                            <div key={agent.name} className="agent-card">
+                                <div className="agent-icon">{agent.icon}</div>
+                                <div className="agent-name">Agent {agent.name}</div>
+                                <div className="agent-status">● {agent.status}</div>
+                                <div className="agent-confidence">{agent.confidence}%</div>
+                                <div style={{fontSize: '11px', color: '#64748b', marginTop: '4px'}}>Confiance</div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="chart-card">
+                        <div className="chart-title">🎯 Derniere Analyse - Secteur 221122 (Distribution Electrique)</div>
+                        <div style={{padding: '20px', background: '#0f172a', borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px', lineHeight: '1.6'}}>
+                            <div style={{color: '#22c55e'}}>{'>'} ANALYSE COMPLETE SECTEUR 221122</div>
+                            <br/>
+                            <div><span style={{color: '#3b82f6'}}>[ANALYSE]</span> Gravite elevee detectee - Confiance: 85%</div>
+                            <div><span style={{color: '#f59e0b'}}>[PREDICTION]</span> Niveau: CRITICAL - Score: 100/100</div>
+                            <div><span style={{color: '#8b5cf6'}}>[RECOMMANDATION]</span> Top: Inspection echelles (ROI: 18650%)</div>
+                            <div><span style={{color: '#22c55e'}}>[CONFORMITE]</span> Score: 85.7% - 1 element a verifier</div>
+                            <div><span style={{color: '#ec4899'}}>[BENCHMARKING]</span> Performance: Quartile inferieur</div>
+                            <br/>
+                            <div style={{color: '#64748b'}}>Analyse terminee en 2.3s</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Comparison Tab
+        function ComparisonTab() {
+            const [activeJurisdiction, setActiveJurisdiction] = useState('all');
+            
+            return (
+                <div>
+                    <div className="header">
+                        <div>
+                            <h1 className="header-title">Comparaison Multi-Juridictions</h1>
+                            <p className="header-subtitle">CNESST (Quebec) vs OSHA (USA) vs EU-OSHA (Europe)</p>
+                        </div>
+                    </div>
+                    
+                    <div className="jurisdiction-tabs">
+                        {['all', 'cnesst', 'osha', 'euosha'].map(j => (
+                            <div 
+                                key={j}
+                                className={`jurisdiction-tab ${activeJurisdiction === j ? 'active' : ''}`}
+                                onClick={() => setActiveJurisdiction(j)}
+                            >
+                                {j === 'all' ? '🌍 Toutes' : j === 'cnesst' ? '🍁 CNESST' : j === 'osha' ? '🇺🇸 OSHA' : '🇪🇺 EU-OSHA'}
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="stats-grid">
+                        <StatsCard label="Quebec (CNESST)" value="355,393" type="info" icon="🍁" />
+                        <StatsCard label="USA (OSHA)" value="1,471,370" type="warning" icon="🇺🇸" />
+                        <StatsCard label="Europe (EU-OSHA)" value="1,245,000" type="success" icon="🇪🇺" />
+                        <StatsCard label="Total Harmonise" value="3,071,763" type="critical" icon="🌍" />
+                    </div>
+                    
+                    <div className="charts-grid">
+                        <div className="chart-card">
+                            <div className="chart-title">📊 Comparaison Secteur Electrique (221122 / 2211 / D35)</div>
+                            <table style={{marginTop: '20px'}}>
+                                <thead>
+                                    <tr>
+                                        <th>Juridiction</th>
+                                        <th>Code</th>
+                                        <th>Incidents</th>
+                                        <th>Deces</th>
+                                        <th>Taux pour 100K</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>🍁 Quebec (CNESST)</td>
+                                        <td>221122</td>
+                                        <td>2,925</td>
+                                        <td>12</td>
+                                        <td>45.2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>🇺🇸 USA (OSHA)</td>
+                                        <td>2211</td>
+                                        <td>10,870</td>
+                                        <td>451</td>
+                                        <td>52.8</td>
+                                    </tr>
+                                    <tr>
+                                        <td>🇩🇪 Allemagne</td>
+                                        <td>D35</td>
+                                        <td>8,459</td>
+                                        <td>123</td>
+                                        <td>38.4</td>
+                                    </tr>
+                                    <tr>
+                                        <td>🇫🇷 France</td>
+                                        <td>D35</td>
+                                        <td>7,737</td>
+                                        <td>96</td>
+                                        <td>41.2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>🇬🇧 UK</td>
+                                        <td>D35</td>
+                                        <td>2,890</td>
+                                        <td>11</td>
+                                        <td>28.9</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="chart-card">
+                            <div className="chart-title">🗺️ Carte des Risques</div>
+                            <div className="map-container">
+                                <div className="map-placeholder">
+                                    <div style={{fontSize: '48px', marginBottom: '12px'}}>🗺️</div>
+                                    <div>Carte interactive</div>
+                                    <div style={{fontSize: '12px'}}>Risques par region</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Chat Tab
+        function ChatTab() {
+            const [messages, setMessages] = useState([
+                { role: 'assistant', content: 'Bonjour! Je suis l\'assistant HSE SafetyGraph. Comment puis-je vous aider?' }
+            ]);
+            const [input, setInput] = useState('');
+            
+            const handleSend = async () => {
+                if (!input.trim()) return;
+                
+                setMessages(prev => [...prev, { role: 'user', content: input }]);
+                const userQuery = input;
+                setInput('');
+                
+                // Simulate API response
+                setTimeout(() => {
+                    let response = '';
+                    if (userQuery.toLowerCase().includes('statistique')) {
+                        response = 'Statistiques SafetyGraph:\n- Total incidents: 1,826,763\n- CNESST: 355,393 lesions\n- OSHA: 1,471,370 cas\n- 5,132 deces enregistres';
+                    } else if (userQuery.toLowerCase().includes('221122') || userQuery.toLowerCase().includes('electrique')) {
+                        response = 'Secteur 221122 (Distribution Electrique):\n- Niveau de risque: CRITICAL\n- Score: 100/100\n- Risques: Electrocution, Chutes, Arc Flash\n- Recommandation: Audit immediat requis';
+                    } else {
+                        response = 'Je peux vous aider avec:\n1. Statistiques globales\n2. Analyse de secteur (ex: 221122)\n3. Comparaison Quebec/USA/Europe\n4. Recommandations preventives';
+                    }
+                    setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+                }, 500);
+            };
+            
+            return (
+                <div>
+                    <div className="header">
+                        <div>
+                            <h1 className="header-title">Assistant IA HSE</h1>
+                            <p className="header-subtitle">Posez vos questions sur la securite au travail</p>
+                        </div>
+                    </div>
+                    
+                    <div className="charts-grid">
+                        <div className="chat-card">
+                            <div className="chat-header">💬 Conversation avec l'Agent HSE</div>
+                            <div className="chat-messages">
+                                {messages.map((msg, i) => (
+                                    <div key={i} className={`chat-message ${msg.role}`}>
+                                        <div className="chat-bubble" style={{whiteSpace: 'pre-line'}}>{msg.content}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="chat-input-container">
+                                <input 
+                                    className="chat-input"
+                                    placeholder="Posez votre question..."
+                                    value={input}
+                                    onChange={e => setInput(e.target.value)}
+                                    onKeyPress={e => e.key === 'Enter' && handleSend()}
+                                />
+                                <button className="chat-send" onClick={handleSend}>Envoyer</button>
+                            </div>
+                        </div>
+                        
+                        <div className="chart-card">
+                            <div className="chart-title">💡 Suggestions</div>
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                {[
+                                    'Quelles sont les statistiques globales?',
+                                    'Analyse le secteur 221122',
+                                    'Compare Quebec vs USA',
+                                    'Recommandations pour la construction'
+                                ].map((q, i) => (
+                                    <div 
+                                        key={i}
+                                        style={{padding: '12px', background: '#334155', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'}}
+                                        onClick={() => setInput(q)}
+                                    >
+                                        {q}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Main App
+        function App() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [stats, setStats] = useState(null);
+            const [loading, setLoading] = useState(true);
+            
+            useEffect(() => {
+                // Fetch initial data
+                const fetchData = async () => {
+                    const statsData = await api.get('stats');
+                    setStats(statsData);
+                    setLoading(false);
+                };
+                fetchData();
+            }, []);
+            
+            useEffect(() => {
+                // Initialize charts when dashboard is active
+                if (activeTab === 'dashboard' && !loading) {
+                    setTimeout(() => {
+                        // Sector Chart
+                        const sectorCtx = document.getElementById('sectorChart')?.getContext('2d');
+                        if (sectorCtx) {
+                            new Chart(sectorCtx, {
+                                type: 'bar',
+                                data: {
+                                    labels: ['Sante (62)', 'Transport', 'Fabrication', 'Construction', 'Commerce', 'Electrique'],
+                                    datasets: [{
+                                        label: 'Incidents',
+                                        data: [496600, 289000, 253000, 212000, 180200, 10870],
+                                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#3b82f6', '#22c55e', '#8b5cf6']
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Risk Chart
+                        const riskCtx = document.getElementById('riskChart')?.getContext('2d');
+                        if (riskCtx) {
+                            new Chart(riskCtx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['TMS', 'Chutes', 'Machines', 'Vehicules', 'Electrique'],
+                                    datasets: [{
+                                        data: [35, 25, 20, 12, 8],
+                                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e', '#8b5cf6']
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'right', labels: { color: '#e2e8f0' } } }
+                                }
+                            });
+                        }
+                    }, 100);
+                }
+            }, [activeTab, loading]);
+            
+            const renderTab = () => {
+                switch(activeTab) {
+                    case 'dashboard': return <DashboardTab stats={stats} />;
+                    case 'agents': return <AgentsTab />;
+                    case 'comparison': return <ComparisonTab />;
+                    case 'chat': return <ChatTab />;
+                    default: return <DashboardTab stats={stats} />;
+                }
+            };
+            
+            return (
+                <div className="app-container">
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <div className="main-content">
+                        {loading ? (
+                            <div className="loading"><div className="spinner"></div></div>
+                        ) : (
+                            renderTab()
+                        )}
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

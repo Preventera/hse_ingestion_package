@@ -1,0 +1,42 @@
+{
+  "stats": {
+    "cnesst": {
+      "records": 82,
+      "total_lesions": 355393
+    },
+    "osha": {
+      "records": 44,
+      "total_cases": 1471370,
+      "total_deaths": 5132
+    },
+    "combined_incidents": 1826763
+  },
+  "sector_data": {
+    "records": 18
+  },
+  "comparison": {
+    "sector": "221122",
+    "cnesst": {
+      "jurisdiction": "Quebec",
+      "cases": 5218,
+      "days_lost": 61339
+    },
+    "osha": {
+      "jurisdiction": "USA",
+      "cases": 10870,
+      "deaths": 451,
+      "days_lost": 108700
+    },
+    "ratio_usa_qc": 2.08
+  },
+  "prediction": {
+    "sector": "221122",
+    "risk_level": "CRITICAL",
+    "score": 100.0,
+    "factors": [
+      "High severity per incident",
+      "Inherently hazardous industry"
+    ]
+  },
+  "recommendations": "\nRECOMMANDATIONS PREVENTIVES - Secteur 221122\n==================================================\n\nRisques principaux identifies: ELEC, CHUTE, TMS\n\nTOP SOLUTIONS RECOMMANDEES:\n\nELEC:\n  - Verification LOTO systematique (Efficacite: 95%, Cout: $5,000)\n  - Formation arc flash annuelle (Efficacite: 85%, Cout: $15,000)\n\nCHUTE:\n  - Garde-corps conformes (Efficacite: 92%, Cout: $20,000)\n  - Formation travail hauteur (Efficacite: 80%, Cout: $8,000)\n\nROI ESTIME: 150-300% sur 3 ans"
+}

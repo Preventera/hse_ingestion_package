@@ -1,0 +1,212 @@
+[
+  {
+    "risk_id": "4cbc4710-85c2-4059-82bf-5e8eb97e9cfb",
+    "risk_code": "CHUT-US-53924288",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "status": "ACTIVE",
+    "title": {
+      "en": "Fall from height",
+      "fr": "Chute de hauteur"
+    },
+    "jurisdiction": {
+      "primary_country": "US",
+      "country_name": {
+        "en": "United States",
+        "fr": "États-Unis"
+      },
+      "applicable_jurisdictions": [
+        "US"
+      ]
+    },
+    "hazard_classification": {
+      "osha_usa": {
+        "event_type_code": "42",
+        "event_type_description": "",
+        "nature_code": "",
+        "body_part_code": ""
+      },
+      "unified": {
+        "domain_code": "CHUTE",
+        "domain_label": {
+          "en": "Fall from height",
+          "fr": "Chute de hauteur"
+        }
+      }
+    },
+    "industry_classification": {
+      "scian": {
+        "code": "23821",
+        "description_en": "Travaux d'électricité"
+      },
+      "nace": {
+        "code": "F4321",
+        "description": "Travaux d'électricité"
+      },
+      "isic": {
+        "code": "4321",
+        "revision": 4
+      }
+    },
+    "data_provenance": {
+      "source_system": "OSHA_SEVERE_INJURY",
+      "source_record_id": "TEST001",
+      "extraction_date": "2026-01-15T16:29:16.751460",
+      "validation_status": "PENDING"
+    },
+    "metadata": {
+      "created_at": "2026-01-15T16:29:16.751460",
+      "schema_version": "1.0.0",
+      "tags": [
+        "osha",
+        "usa",
+        "chute"
+      ]
+    }
+  },
+  {
+    "risk_id": "8266d547-7e95-48e2-999e-132487381f28",
+    "risk_code": "ELEC-US-12443460",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "status": "ACTIVE",
+    "title": {
+      "en": "Electrical contact",
+      "fr": "Contact électrique"
+    },
+    "jurisdiction": {
+      "primary_country": "US",
+      "country_name": {
+        "en": "United States",
+        "fr": "États-Unis"
+      },
+      "applicable_jurisdictions": [
+        "US"
+      ]
+    },
+    "hazard_classification": {
+      "osha_usa": {
+        "event_type_code": "51",
+        "event_type_description": "",
+        "nature_code": "",
+        "body_part_code": ""
+      },
+      "unified": {
+        "domain_code": "ELEC",
+        "domain_label": {
+          "en": "Electrical contact",
+          "fr": "Contact électrique"
+        }
+      }
+    },
+    "industry_classification": {
+      "scian": {
+        "code": "23821",
+        "description_en": "Travaux d'électricité"
+      },
+      "nace": {
+        "code": "F4321",
+        "description": "Travaux d'électricité"
+      },
+      "isic": {
+        "code": "4321",
+        "revision": 4
+      }
+    },
+    "data_provenance": {
+      "source_system": "OSHA_SEVERE_INJURY",
+      "source_record_id": "TEST002",
+      "extraction_date": "2026-01-15T16:29:16.751460",
+      "validation_status": "PENDING"
+    },
+    "metadata": {
+      "created_at": "2026-01-15T16:29:16.751460",
+      "schema_version": "1.0.0",
+      "tags": [
+        "osha",
+        "usa",
+        "elec"
+      ]
+    }
+  },
+  {
+    "risk_id": "819ab144-d0c0-4bd9-af1f-1b9d7e614bf4",
+    "risk_code": "CHUT-QC-61111703",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "status": "ACTIVE",
+    "title": {
+      "fr": "Chute niveau inférieur",
+      "en": "Fall to lower level"
+    },
+    "jurisdiction": {
+      "primary_country": "CA",
+      "subdivision": {
+        "code": "CA-QC",
+        "name": {
+          "fr": "Québec",
+          "en": "Quebec"
+        },
+        "type": "STATE_PROVINCIAL"
+      },
+      "applicable_jurisdictions": [
+        "CA",
+        "QC"
+      ]
+    },
+    "hazard_classification": {
+      "cnesst": {
+        "genre_accident_code": "31",
+        "genre_accident_description": "",
+        "nature_lesion_code": "",
+        "siege_lesion_code": "",
+        "agent_causal_code": ""
+      },
+      "unified": {
+        "domain_code": "CHUTE",
+        "domain_label": {
+          "fr": "Chute niveau inférieur",
+          "en": "Fall to lower level"
+        }
+      }
+    },
+    "industry_classification": {
+      "scian": {
+        "code": "23",
+        "description_fr": "",
+        "description_en": "Construction"
+      },
+      "nace": {
+        "code": "F"
+      }
+    },
+    "incident_statistics": {
+      "total_incidents": 0,
+      "total_lost_days": 0
+    },
+    "data_provenance": {
+      "source_system": "CNESST",
+      "extraction_date": "2026-01-15T16:29:16.751460",
+      "validation_status": "PENDING"
+    },
+    "metadata": {
+      "created_at": "2026-01-15T16:29:16.751460",
+      "schema_version": "1.0.0",
+      "tags": [
+        "cnesst",
+        "quebec",
+        "canada",
+        "chute"
+      ]
+    }
+  }
+]

@@ -1,0 +1,232 @@
+{
+  "analyse": {
+    "status": "success",
+    "confidence": 0.85,
+    "recommendations": [
+      "ALERTE: Gravite elevee detectee dans secteur 221122"
+    ],
+    "data": {
+      "sector": "221122",
+      "patterns": {
+        "high_severity": true,
+        "trend_increasing": false,
+        "seasonal_pattern": false,
+        "dominant_risk": "Chutes"
+      },
+      "anomalies": [],
+      "cnesst_records": 18,
+      "comparison": {
+        "sector": "221122",
+        "cnesst": {
+          "jurisdiction": "Quebec",
+          "cases": 5218,
+          "days_lost": 61339
+        },
+        "osha": {
+          "jurisdiction": "USA",
+          "cases": 10870,
+          "deaths": 451,
+          "days_lost": 108700
+        },
+        "ratio_usa_qc": 2.08
+      }
+    }
+  },
+  "prediction": {
+    "status": "success",
+    "confidence": 0.78,
+    "recommendations": [
+      "ACTION IMMEDIATE: Audit de securite requis",
+      "Deployer controles additionnels dans les 30 jours"
+    ],
+    "data": {
+      "sector": "221122",
+      "risk_level": "CRITICAL",
+      "risk_score": 100.0,
+      "projection_6_months": {
+        "trend": "increasing",
+        "change_pct": 15.56,
+        "projected_cases_6m": 129263
+      },
+      "factors": [
+        "High severity per incident",
+        "Inherently hazardous industry"
+      ]
+    }
+  },
+  "recommandation": {
+    "status": "success",
+    "confidence": 0.82,
+    "recommendations": [
+      "Top solution: Inspection echelles mensuelle (ROI: 18650%)"
+    ],
+    "data": {
+      "sector": "221122",
+      "identified_risks": [
+        "ELEC",
+        "CHUTE",
+        "TMS"
+      ],
+      "solutions": [
+        {
+          "id": "C3",
+          "solution": "Inspection echelles mensuelle",
+          "efficacite": 0.75,
+          "cout": 2000,
+          "risk_type": "CHUTE",
+          "roi": 18650
+        },
+        {
+          "id": "E1",
+          "solution": "Verification LOTO avant intervention",
+          "efficacite": 0.95,
+          "cout": 5000,
+          "risk_type": "ELEC",
+          "roi": 9400
+        },
+        {
+          "id": "T2",
+          "solution": "Rotation des taches",
+          "efficacite": 0.65,
+          "cout": 5000,
+          "risk_type": "TMS",
+          "roi": 6400
+        },
+        {
+          "id": "C2",
+          "solution": "Formation travail en hauteur",
+          "efficacite": 0.8,
+          "cout": 8000,
+          "risk_type": "CHUTE",
+          "roi": 4900
+        },
+        {
+          "id": "T1",
+          "solution": "Analyse ergonomique postes",
+          "efficacite": 0.7,
+          "cout": 12000,
+          "risk_type": "TMS",
+          "roi": 2816
+        }
+      ],
+      "total_investment": 32000,
+      "expected_reduction": 78.3
+    }
+  },
+  "conformite": {
+    "status": "success",
+    "confidence": 0.9,
+    "recommendations": [
+      "ATTENTION: 1 element(s) a verifier",
+      "Planifier audit interne dans les 30 jours",
+      "Maintenir veille reglementaire trimestrielle"
+    ],
+    "data": {
+      "sector": "221122",
+      "audit_date": "2026-01-16",
+      "regulations_checked": 7,
+      "non_conformites": 1,
+      "score_conformite": 85.7,
+      "details": [
+        {
+          "code": "RSST-51",
+          "titre": "Travaux electriques",
+          "source": "CNESST",
+          "status": "CONFORME",
+          "prochaine_echeance": "2026-06-01"
+        },
+        {
+          "code": "RSST-312",
+          "titre": "Travail en hauteur",
+          "source": "CNESST",
+          "status": "CONFORME",
+          "prochaine_echeance": "2026-06-01"
+        },
+        {
+          "code": "RSST-166",
+          "titre": "Cadenassage",
+          "source": "CNESST",
+          "status": "CONFORME",
+          "prochaine_echeance": "2026-06-01"
+        },
+        {
+          "code": "LSST-51",
+          "titre": "Droit de refus",
+          "source": "CNESST",
+          "status": "A VERIFIER",
+          "prochaine_echeance": "2026-06-01"
+        },
+        {
+          "code": "ISO-45001",
+          "titre": "Management SST",
+          "source": "ISO",
+          "status": "CONFORME",
+          "prochaine_echeance": "2026-06-01"
+        },
+        {
+          "code": "ISO-14001",
+          "titre": "Management environnemental",
+          "source": "ISO",
+          "status": "CONFORME",
+          "prochaine_echeance": "2026-06-01"
+        },
+        {
+          "code": "29CFR1910.147",
+          "titre": "Lockout/Tagout",
+          "source": "OSHA",
+          "status": "CONFORME",
+          "prochaine_echeance": "2026-06-01"
+        }
+      ]
+    }
+  },
+  "benchmarking": {
+    "status": "success",
+    "confidence": 0.8,
+    "recommendations": [
+      "Performance dans le quartile inferieur",
+      "Etudier pratiques des leaders sectoriels"
+    ],
+    "data": {
+      "sector": "221122",
+      "comparison_qc_usa": {
+        "sector": "221122",
+        "cnesst": {
+          "jurisdiction": "Quebec",
+          "cases": 5218,
+          "days_lost": 61339
+        },
+        "osha": {
+          "jurisdiction": "USA",
+          "cases": 10870,
+          "deaths": 451,
+          "days_lost": 108700
+        },
+        "ratio_usa_qc": 2.08
+      },
+      "positioning": {
+        "percentile": 15,
+        "rank": "Bottom 15%",
+        "gravite_moyenne": 12.83
+      },
+      "best_practices": [
+        {
+          "practice": "Programme prevention proactif",
+          "adoption": "82%",
+          "impact": "Reduction 25% incidents"
+        },
+        {
+          "practice": "Formation continue obligatoire",
+          "adoption": "67%",
+          "impact": "Reduction 18% gravite"
+        },
+        {
+          "practice": "Audits croises inter-sites",
+          "adoption": "45%",
+          "impact": "Detection precoce risques"
+        }
+      ],
+      "sectors_analyzed": 8
+    }
+  }
+}
