@@ -1,0 +1,23 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# IDE
+.vscode/
+.idea/
+
+# Data files (trop gros)
+*.csv
+*.zip
+data/osha/
+
+# OS
+.DS_Store
+Thumbs.db
