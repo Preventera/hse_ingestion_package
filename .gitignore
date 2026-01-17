@@ -1,23 +1,14 @@
-# Virtual Environment
-venv/
-.venv/
-env/
-
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-.Python
-
-# IDE
-.vscode/
-.idea/
-
-# Data files (trop gros)
+# Large data files
+data/kaggle/ITA_OSHA_Combined.csv
+data/kaggle/*.csv
+deployment/data/osha/*.csv
 *.csv
-*.zip
-data/osha/
 
-# OS
-.DS_Store
-Thumbs.db
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Data folders
+data/
+deployment/data/
